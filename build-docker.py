@@ -50,8 +50,8 @@ DEBS = [
 
 class DepSrc (object):
     def __init__(self, name, sha256, ext, urlbase):
-        self._name = name
-        self._sha256 = sha256
+        self.sha256 = sha256
+        self.dlname = '{name}{ext}'.format(**locals())
         self._url = '{urlbase}{name}{ext}'.format(**locals())
         self._wgetxtra = []
 
@@ -66,10 +66,10 @@ class DepSrc (object):
 class GithubDepSrc (DepSrc):
     def __init__(self, name, sha256, user, commit):
         ext = '.tar.gz'
-        self.name = name
-        self._sha256 = sha256
+        self.dlname = '{name}-{commit}{ext}'.format(**locals())
+        self.sha256 = sha256
         self._url = 'https://github.com/{user}/{name}/archive/{commit}{ext}'.format(**locals())
-        self._wgetxtra = ['-O', '{name}-{commit}{ext}'.format(**locals())]
+        self._wgetxtra = ['-O', self.dlname]
 
 
 DEPSRCS = [
