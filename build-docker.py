@@ -5,39 +5,40 @@ import os
 import argparse
 
 
+DOCKER_CTX = 'dockerctx'
+
+
 def main(args = sys.argv[1:]):
     """
     Build a docker image for fetching/building libzerocash.
     """
     parse_args(args)
 
-    with file(os.path.join('dockerctx', 'fingerprints'), 'w') as f:
+    with LineWriter('fingerprints') as w:
         for depsrc in DEPSRCS:
-            f.write('{}  {}\n'.format(depsrc.sha256, depsrc.dlname))
+            w('{}  {}', depsrc.sha256, depsrc.dlname)
 
-    with file(os.path.join('dockerctx', 'Dockerfile'), 'w') as df:
-        wl = lambda l: df.write('{}\n'.format(l))
-
-        for line in PRELUDE:
-            wl(line)
+    with LineWriter('Dockerfile') as w:
+        w('FROM debian:latest')
+        w('RUN DEBIAN_FRONTEND=noninteractive apt-get -y update')
 
         for deb in DEBS:
-            wl(APTGET_TMPL.format(deb))
+            w('RUN DEBIAN_FRONTEND=noninteractive apt-get -y install {}',
+              deb)
 
         for depsrc in DEPSRCS:
-            wl(depsrc.fetch_command)
+            w('{}', depsrc.fetch_command)
 
-        wl('ADD fingerprints')
-        wl('RUN sha256sum --check fingerprints')
-        wl('RUN find')
+        w('ADD fingerprints')
+        w('RUN sha256sum --check fingerprints')
+        w('RUN find')
 
+    print 'Docker build:'
+    os.execvp('docker',
+              ['docker', 'build',
+               '-t', 'libzerocash-build',
+               DOCKER_CTX])
 
-PRELUDE = [
-    'FROM debian:latest',
-    'RUN apt-get -y update',
-    ]
-
-APTGET_TMPL = 'RUN DEBIAN_FRONTEND=noninteractive apt-get install {}'
 
 DEBS = [
     'apt-utils',
@@ -122,6 +123,25 @@ DEPSRCS = [
 def parse_args(args):
     p = argparse.ArgumentParser(description=main.__doc__)
     return p.parse_args(args)
+
+
+class LineWriter (object):
+    def __init__(self, name):
+        self._name = name
+        self._f = None
+
+    def __enter__(self):
+        path = os.path.join(DOCKER_CTX, self._name)
+        print 'Generating {!r}.'.format(path)
+        self._f = file(path, 'w')
+        return self
+
+    def __exit__(self, *a, **kw):
+        self._f.flush()
+        self._f.close()
+
+    def __call__(self, tmpl, *args, **kw):
+        self._f.write(tmpl.format(*args, **kw) + '\n')
 
 
 if __name__ == '__main__':
