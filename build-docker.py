@@ -31,9 +31,19 @@ def main(args = sys.argv[1:]):
         for depsrc in DEPSRCS:
             w('{}', depsrc.fetch_command)
 
-        w('ADD fingerprints ./')
-        w('RUN sha256sum --check fingerprints')
-        w('RUN find')
+        for depsrc in DEPSRCS:
+            w("RUN [ $(sha256sum {} | awk '{{ print $1 }}') = {} ]",
+              depsrc.dlname,
+              depsrc.sha256,
+              )
+
+        w('ADD extract.sh ./')
+
+        for depsrc in DEPSRCS:
+            srcname = 'src-{}'.format(depsrc.name)
+            w('RUN ./extract.sh {} {}', srcname, depsrc.dlname)
+
+        w('RUN ls -F')
 
     print 'Docker build:'
     os.execvp('docker',
@@ -48,11 +58,14 @@ DEBS = [
     'git-core',
     'stow',
     'wget',
+    'unzip',
     ]
 
 
 class DepSrc (object):
     def __init__(self, name, sha256, ext, urlbase):
+        self.name = name
+        self.ext = ext
         self.sha256 = sha256
         self.dlname = '{name}{ext}'.format(**locals())
         self._url = '{urlbase}{name}{ext}'.format(**locals())
@@ -68,7 +81,8 @@ class DepSrc (object):
 
 class GithubDepSrc (DepSrc):
     def __init__(self, name, sha256, user, commit):
-        ext = '.tar.gz'
+        self.name = name
+        ext = self.ext = '.tar.gz'
         self.dlname = '{name}-{commit}{ext}'.format(**locals())
         self.sha256 = sha256
         self._url = 'https://github.com/{user}/{name}/archive/{commit}{ext}'.format(**locals())
@@ -119,7 +133,6 @@ DEPSRCS = [
         commit='69f312f149cc4bd8def8e2fed26a7941ff41251d',
     ),
 ]
-
 
 
 def parse_args(args):
