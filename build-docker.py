@@ -170,6 +170,7 @@ DEPSRCS = [
              'no-rdrand', 'no-rfc3779', 'no-rsax', 'no-sctp', 'no-seed',
              'no-sha0', 'no-static_engine', 'no-whirlpool', 'no-rc2',
              'no-rc4', 'no-ssl2', 'no-ssl3', 'linux-x86_64'],
+            'make depend',
             'make -j1 build_libs libcrypto.pc libssl.pc openssl.pc',
             'make INSTALL_PREFIX=${PREFIX} -j1 install_sw',
         ],
