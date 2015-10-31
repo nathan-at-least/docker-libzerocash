@@ -1,0 +1,13 @@
+diff --git a/Makefile b/Makefile
+index 5f59388..7412e06 100644
+--- a/Makefile
++++ b/Makefile
+@@ -288,7 +288,7 @@ $(HEADERS_DEST): $(PREFIX)/include/libsnark/%: src/%
+ install: $(INSTALL_LIBS) $(HEADERS_DEST) $(DEPINST_EXISTS)
+ 	mkdir -p $(PREFIX)/lib
+ 	cp -v $(INSTALL_LIBS) $(PREFIX)/lib/
+-	cp -rv $(DEPINST)/include $(PREFIX)
++	[ "$(DEPINST)" = "$(PREFIX)" ] || cp -rv $(DEPINST)/include $(PREFIX)
+ endif
+ 
+ doxy:

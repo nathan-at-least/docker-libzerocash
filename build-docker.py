@@ -54,6 +54,13 @@ def main(args = sys.argv[1:]):
             w('ENV PREFIX={}', stowdir)
 
             w('WORKDIR {}', srcname)
+
+            patchname = '{}.patch'.format(depsrc.name)
+            if os.path.isfile(os.path.join('dockerctx', patchname)):
+                print 'Incorporating patch: {}'.format(patchname)
+                w('ADD {} ./', patchname)
+                w('RUN patch -p1 < {}', patchname)
+
             for cmd in depsrc.buildinstcmds:
                 if type(cmd) is list:
                     cmd = ' '.join(cmd)
