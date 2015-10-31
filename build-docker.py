@@ -160,7 +160,19 @@ DEPSRCS = [
         sha256='8f9faeaebad088e772f4ef5e38252d472be4d878c6b3a2718c10a4fcebe7a41c',
         ext='.tar.gz',
         urlbase='https://www.openssl.org/source/',
-        buildinstcmds=[],
+        buildinstcmds=[
+            'sed -i.old "/define DATE/d" util/mkbuildinf.pl',
+            'sed -i.old "s|engines apps test|engines|" Makefile.org',
+            ['./Configure', '--prefix=${PREFIX}', 'no-zlib', 'no-shared',
+             'no-dso', 'no-krb5', 'no-camellia', 'no-capieng', 'no-cast',
+             'no-cms', 'no-dtls1', 'no-gost', 'no-gmp', 'no-heartbeats',
+             'no-idea', 'no-jpake', 'no-md2', 'no-mdc2', 'no-rc5',
+             'no-rdrand', 'no-rfc3779', 'no-rsax', 'no-sctp', 'no-seed',
+             'no-sha0', 'no-static_engine', 'no-whirlpool', 'no-rc2',
+             'no-rc4', 'no-ssl2', 'no-ssl3'],
+            'make -j1 build_libs libcrypto.pc libssl.pc openssl.pc',
+            'make INSTALL_PREFIX=${PREFIX} -j1 install_sw',
+        ],
     ),
     DepSrc(
         name='cryptopp562',
@@ -177,21 +189,35 @@ DEPSRCS = [
         sha256='467a9037c29bc417840177f3ff5d76910d3f688f2f216dd86ced4a7ac837bfb0',
         user='herumi',
         commit='62fd6d022acd83209e2a5af8ec359a3a1bed3a50',
-        buildinstcmds=[],
+        buildinstcmds=[
+            'make install PREFIX=${PREFIX}',
+        ],
     ),
     GithubDepSrc(
         name='ate-pairing',
         sha256='37c05b4a60653b912a0130d77ac816620890d65a51dd9629ed65c15b54c2d8e0',
         user='herumi',
         commit='dd7889f2881e66f87165fcd180a03cf659bcb073',
-        buildinstcmds=[],
+        buildinstcmds=[
+            ['make', '-j', 'SUPPORT_SNARK=1',
+             'INC_DIR=-I../include',
+             'LIB_DIR=-L../lib'],
+            'cp -rv include/ lib/ ${PREFIX}',
+        ],
     ),
     GithubDepSrc(
         name='libsnark',
         sha256='b5ec84a836d0d305407d5f39c8176bae2bb448abe802a8d11ba0f88f17e6d358',
         user='scipr-lab',
         commit='69f312f149cc4bd8def8e2fed26a7941ff41251d',
-        buildinstcmds=[],
+        buildinstcmds=[
+            # FIXME: Apply patch file from zerocashd ./depends
+            ['CXXFLAGS="-fPIC"', 'make', 'lib', 'DEPINST=${PREFIX}',
+             'CURVE=ALT_BN128', 'NO_PROCPS=1', 'NO_GTEST=1', 'NO_DOCS=1',
+             'STATIC=1', 'NO_SUPERCOP=1'],
+            ['make', 'install', 'STATIC=1', 'DEPINST=${PREFIX}',
+             'PREFIX=${PREFIX}', 'CURVE=ALT_BN128', 'NO_SUPERCOP=1'],
+        ],
     ),
 ]
 
