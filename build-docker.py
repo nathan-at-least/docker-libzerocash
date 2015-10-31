@@ -22,9 +22,12 @@ def main(args = sys.argv[1:]):
         w('FROM debian:latest')
         w('RUN DEBIAN_FRONTEND=noninteractive apt-get -y update')
 
-        for deb in DEBS:
-            w('RUN DEBIAN_FRONTEND=noninteractive apt-get -y install {}',
-              deb)
+        def instdebs(debs):
+            for deb in debs:
+                w('RUN DEBIAN_FRONTEND=noninteractive apt-get -y install {}',
+                deb)
+
+        instdebs(DEBS_PREFETCH)
 
         w('WORKDIR docker-workdir')
 
@@ -36,6 +39,8 @@ def main(args = sys.argv[1:]):
               depsrc.dlname,
               depsrc.sha256,
               )
+
+        instdebs(DEBS_BUILD)
 
         w('ADD extract.sh ./')
 
