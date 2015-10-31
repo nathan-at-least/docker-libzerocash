@@ -26,10 +26,12 @@ def main(args = sys.argv[1:]):
             w('RUN DEBIAN_FRONTEND=noninteractive apt-get -y install {}',
               deb)
 
+        w('WORKDIR docker-workdir')
+
         for depsrc in DEPSRCS:
             w('{}', depsrc.fetch_command)
 
-        w('ADD fingerprints')
+        w('ADD fingerprints ./')
         w('RUN sha256sum --check fingerprints')
         w('RUN find')
 
