@@ -7,9 +7,6 @@ import argparse
 import subprocess
 
 
-BASE_TAG = 'build-env'
-CAB_TAG = 'clone-and-build'
-LOCAL_TAG = 'custom-build'
 BANNER = '=' * 40
 
 
