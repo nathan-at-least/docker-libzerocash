@@ -81,7 +81,7 @@ def generate_docker_for_build_env(buildctx):
             w('WORKDIR {}', srcname)
 
             patchname = '{}.patch'.format(depsrc.name)
-            if os.path.isfile(os.path.join('dockerctx', patchname)):
+            if os.path.isfile(buildctx.subpath(patchname)):
                 print 'Incorporating patch: {}'.format(patchname)
                 w('COPY {} ./', patchname)
                 w('RUN patch -p1 < {}', patchname)
@@ -262,8 +262,11 @@ class BuildContext (object):
         srcctx = os.path.join('ctx', name)
         shutil.copytree(srcctx, self.path)
 
+    def subpath(self, *parts):
+        return os.path.join(self.path, *parts)
+
     def line_writer(self, name):
-        return LineWriter(os.path.join(self.path, name))
+        return LineWriter(self.subpath(name))
 
 
 class LineWriter (object):
