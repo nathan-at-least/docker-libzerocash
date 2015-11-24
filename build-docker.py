@@ -60,11 +60,8 @@ def generate_docker_for_build_env(buildctx):
         for depsrc in DEPSRCS:
             w('{}', depsrc.fetch_command)
 
-        for depsrc in DEPSRCS:
-            w("RUN [ $(sha256sum {} | awk '{{ print $1 }}') = {} ]",
-              depsrc.dlname,
-              depsrc.sha256,
-              )
+        w('COPY fingerprints ./')
+        w('RUN sha256sum --check ./fingerprints')
 
         instdebs(DEBS_BUILD)
 
