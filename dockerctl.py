@@ -49,7 +49,10 @@ def generate_docker_for_build_env(buildctx):
         w('RUN DEBIAN_FRONTEND=noninteractive apt-get -y update')
 
         def instdebs(debs):
-            w('RUN DEBIAN_FRONTEND=noninteractive apt-get -y install {}',
+            w(' && '.join(
+                ['RUN DEBIAN_FRONTEND=noninteractive apt-get -y update',
+                 'DEBIAN_FRONTEND=noninteractive apt-get -y install {}',
+                 ]),
               ' '.join(debs))
 
         instdebs(DEBS_PREFETCH)
