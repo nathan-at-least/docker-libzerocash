@@ -100,11 +100,20 @@ DEBS_PREFETCH = [
     ]
 
 DEBS_BUILD = [
+    'autoconf',
     'build-essential',
-    'git-core',
+    'g++-multilib',
+    'git',
+    'libc6-dev',
+    'libgtest-dev',
+    'libtool',
+    'm4',
+    'ncurses-dev',
+    'pkg-config',
+    'python',
     'stow',
     'unzip',
-    'm4',
+    'zlib1g-dev',
     ]
 
 
