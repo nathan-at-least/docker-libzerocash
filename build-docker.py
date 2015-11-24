@@ -3,8 +3,10 @@
 import sys
 import os
 import argparse
+import subprocess
 
 
+DOCKER_TAG = 'libzerocash-build'
 DOCKER_CTX = 'dockerctx'
 
 
@@ -70,14 +72,20 @@ def main(args = sys.argv[1:]):
 
             w('WORKDIR ..')
 
-        w('RUN ls -F')
-        w('RUN find /usr/local/lib /usr/local/include -print0 | xargs -0 ls -ld')
+        w('ADD clone-build-test.sh ./')
+        w('CMD ./clone-build-test.sh')
+
 
     print 'Docker build:'
-    os.execvp('docker',
-              ['docker', 'build',
-               '-t', 'libzerocash-build',
-               DOCKER_CTX])
+    subprocess.check_call(
+        ['docker', 'build', '-t', DOCKER_TAG, DOCKER_CTX],
+    )
+
+    print 'Docker run:'
+    subprocess.check_call(
+        ['docker', 'run', DOCKER_TAG],
+    )
+
 
 
 DEBS_PREFETCH = [
@@ -179,7 +187,7 @@ DEPSRCS = [
              'no-rc4', 'no-ssl2', 'no-ssl3', 'linux-x86_64'],
             'make depend',
             'make -j1 build_libs libcrypto.pc libssl.pc openssl.pc',
-            'make INSTALL_PREFIX=${PREFIX} -j1 install_sw',
+            'make -j1 install_sw',
         ],
     ),
     DepSrc(
