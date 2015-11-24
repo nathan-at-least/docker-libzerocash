@@ -2,12 +2,14 @@
 
 import sys
 import os
+import shutil
 import argparse
 import subprocess
 
 
-DOCKER_TAG = 'libzerocash-build'
-DOCKER_CTX = 'dockerctx'
+BASE_TAG = 'build-env'
+CAB_TAG = 'clone-and-build'
+LOCAL_TAG = 'custom-build'
 
 
 def main(args = sys.argv[1:]):
@@ -16,11 +18,33 @@ def main(args = sys.argv[1:]):
     """
     parse_args(args)
 
-    with LineWriter('fingerprints') as w:
+    bctx_build_env = BuildContext('build-env')
+    bctx_clone_and_build = BuildContext('clone-and-build')
+    #bctx_custom = BuildContext('custom')
+
+    bctxs = [bctx_build_env, bctx_clone_and_build]
+
+    generate_docker_for_build_env(bctx_build_env)
+
+    for bctx in bctxs:
+        print 'Docker build {!r}:'.format(bctx.tag)
+        subprocess.check_call(
+            ['docker', 'build', '-t', bctx.tag, bctx.path],
+        )
+
+    for bctx in bctxs:
+        print 'Docker run {!r}:'.format(bctx.tag)
+        subprocess.check_call(
+            ['docker', 'run', bctx.tag],
+        )
+
+
+def generate_docker_for_build_env(buildctx):
+    with buildctx.line_writer('fingerprints') as w:
         for depsrc in DEPSRCS:
             w('{}  {}', depsrc.sha256, depsrc.dlname)
 
-    with LineWriter('Dockerfile') as w:
+    with buildctx.line_writer('Dockerfile') as w:
         w('FROM debian:latest')
         w('RUN DEBIAN_FRONTEND=noninteractive apt-get -y update')
 
@@ -71,21 +95,6 @@ def main(args = sys.argv[1:]):
             w('RUN cd /usr/local/stow ; stow {}', depsrc.name)
 
             w('WORKDIR ..')
-
-        w('ADD clone-build-test.sh ./')
-        w('CMD ./clone-build-test.sh')
-
-
-    print 'Docker build:'
-    subprocess.check_call(
-        ['docker', 'build', '-t', DOCKER_TAG, DOCKER_CTX],
-    )
-
-    print 'Docker run:'
-    subprocess.check_call(
-        ['docker', 'run', DOCKER_TAG],
-    )
-
 
 
 DEBS_PREFETCH = [
@@ -243,15 +252,29 @@ def parse_args(args):
     return p.parse_args(args)
 
 
-class LineWriter (object):
+class BuildContext (object):
     def __init__(self, name):
-        self._name = name
+        self.path = os.path.join('build', name)
+        self.tag = 'libzerocash-{}'.format(name)
+
+        if os.path.isdir(self.path):
+            shutil.rmtree(self.path)
+
+        srcctx = os.path.join('ctx', name)
+        shutil.copytree(srcctx, self.path)
+
+    def line_writer(self, name):
+        return LineWriter(os.path.join(self.path, name))
+
+
+class LineWriter (object):
+    def __init__(self, path):
+        self._path = path
         self._f = None
 
     def __enter__(self):
-        path = os.path.join(DOCKER_CTX, self._name)
-        print 'Generating {!r}.'.format(path)
-        self._f = file(path, 'w')
+        print 'Generating {!r}.'.format(self._path)
+        self._f = file(self._path, 'w')
         return self
 
     def __exit__(self, *a, **kw):
