@@ -10,6 +10,7 @@ import subprocess
 BASE_TAG = 'build-env'
 CAB_TAG = 'clone-and-build'
 LOCAL_TAG = 'custom-build'
+BANNER = '=' * 40
 
 
 def main(args = sys.argv[1:]):
@@ -27,13 +28,13 @@ def main(args = sys.argv[1:]):
     generate_docker_for_build_env(bctx_build_env)
 
     for bctx in bctxs:
-        print 'Docker build {!r}:'.format(bctx.tag)
+        print '\n{}\nDocker build {!r}:'.format(BANNER, bctx.tag)
         subprocess.check_call(
             ['docker', 'build', '-t', bctx.tag, bctx.path],
         )
 
     for bctx in bctxs:
-        print 'Docker run {!r}:'.format(bctx.tag)
+        print '\n{}\nDocker run {!r}:'.format(BANNER, bctx.tag)
         subprocess.check_call(
             ['docker', 'run', bctx.tag],
         )
