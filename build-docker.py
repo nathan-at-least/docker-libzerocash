@@ -68,7 +68,7 @@ def generate_docker_for_build_env(buildctx):
 
         instdebs(DEBS_BUILD)
 
-        w('ADD extract.sh ./')
+        w('COPY extract.sh ./')
 
         for depsrc in DEPSRCS:
             srcname = 'src-{}'.format(depsrc.name)
@@ -84,7 +84,7 @@ def generate_docker_for_build_env(buildctx):
             patchname = '{}.patch'.format(depsrc.name)
             if os.path.isfile(os.path.join('dockerctx', patchname)):
                 print 'Incorporating patch: {}'.format(patchname)
-                w('ADD {} ./', patchname)
+                w('COPY {} ./', patchname)
                 w('RUN patch -p1 < {}', patchname)
 
             for cmd in depsrc.buildinstcmds:
